@@ -1,0 +1,59 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: violeta-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: violeta
+      POSTGRES_PASSWORD: violeta123
+      POSTGRES_DB: violeta_digital
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U violeta -d violeta_digital"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # API Service
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: violeta-api
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      DB_TYPE: postgres
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: violeta
+      DB_PASSWORD: violeta123
+      DB_NAME: violeta_digital
+      PORT: 3000
+      HOST: 0.0.0.0
+      CORS_ORIGIN: "*"
+      RATE_LIMIT_MAX: 10
+      RATE_LIMIT_WINDOW: 60000
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  default:
+    name: violeta-network

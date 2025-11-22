@@ -1,0 +1,24 @@
+{
+  "name": "violeta-digital-api",
+  "version": "1.0.0",
+  "description": "API for Violeta Digital report system",
+  "type": "module",
+  "scripts": {
+    "dev": "bun --watch src/index.ts",
+    "start": "bun src/index.ts",
+    "typeorm": "typeorm-ts-node-esm"
+  },
+  "dependencies": {
+    "@elysiajs/cors": "^1.1.1",
+    "elysia": "^1.1.23",
+    "typeorm": "^0.3.20",
+    "pg": "^8.13.1",
+    "better-sqlite3": "^11.7.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/pg": "^8.11.10",
+    "bun-types": "latest"
+  }
+}
