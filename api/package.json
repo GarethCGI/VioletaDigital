@@ -10,10 +10,13 @@
   },
   "dependencies": {
     "@elysiajs/cors": "^1.1.1",
-    "elysia": "^1.1.23",
-    "typeorm": "^0.3.20",
-    "pg": "^8.13.1",
+    "@node-rs/bcrypt": "^1.10.7",
+    "@types/jsonwebtoken": "^9.0.10",
     "better-sqlite3": "^11.7.0",
+    "elysia": "^1.1.23",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.13.1",
+    "typeorm": "^0.3.20",
     "zod": "^3.23.8"
   },
   "devDependencies": {

@@ -3,6 +3,7 @@ import { AppDataSource } from '@/database';
 import { Report } from '@/entities/Report';
 import { createReportSchema, listReportsQuerySchema } from '@/schemas/report.schema';
 import { createRateLimiter } from '@/middleware/rateLimiter';
+import { authMiddleware } from '@/middleware/auth';
 
 // Create rate limiter instance
 const rateLimiter = createRateLimiter(
@@ -37,7 +38,7 @@ export function createReportRoutes(app: Elysia) {
         return {};
       })
 
-      // POST /api/reports - Create a new report
+      // POST /api/reports - Create a new report (public)
       .post('/', async ({ body, set }) => {
         try {
           // Validate input
@@ -74,14 +75,18 @@ export function createReportRoutes(app: Elysia) {
         }
       })
 
-      // GET /api/reports - List reports with pagination
-      .get('/', async ({ query, set }) => {
+      // Protected subgroup for read endpoints
+      .group('', (protectedApp) =>
+        protectedApp
+          .use(authMiddleware)
+          // GET /api/reports - List reports with pagination (protected)
+          .get('/', async ({ query, set }) => {
         try {
           // Validate and parse query params
           const { page, limit, role, type } = listReportsQuerySchema.parse(query);
 
           // Build query
-          const queryBuilder = reportRepository.createQueryBuilder('report');
+              const queryBuilder = reportRepository.createQueryBuilder('report');
 
           if (role) {
             queryBuilder.andWhere('report.role = :role', { role });
@@ -120,36 +125,105 @@ export function createReportRoutes(app: Elysia) {
             error: 'Error al obtener los reportes',
           };
         }
-      })
+          })
 
-      // GET /api/reports/:id - Get single report by ID
-      .get('/:id', async ({ params, set }) => {
-        try {
-          const report = await reportRepository.findOne({
-            where: { id: params.id },
-          });
+          // GET /api/reports/:id - Get single report by ID (protected)
+          .get('/:id', async ({ params, set }) => {
+            try {
+              const report = await reportRepository.findOne({
+                where: { id: params.id },
+              });
 
-          if (!report) {
-            set.status = 404;
-            return {
-              success: false,
-              error: 'Reporte no encontrado',
-            };
-          }
+              if (!report) {
+                set.status = 404;
+                return {
+                  success: false,
+                  error: 'Reporte no encontrado',
+                };
+              }
 
-          return {
-            success: true,
-            data: report,
-          };
-        } catch (error) {
-          console.error('Error fetching report:', error);
-          
-          set.status = 500;
-          return {
-            success: false,
-            error: 'Error al obtener el reporte',
-          };
-        }
-      })
+              return {
+                success: true,
+                data: report,
+              };
+            } catch (error) {
+              console.error('Error fetching report:', error);
+              
+              set.status = 500;
+              return {
+                success: false,
+                error: 'Error al obtener el reporte',
+              };
+            }
+          })
+
+          // GET /api/reports/stats - Aggregated statistics (protected)
+          .get('/stats', async ({ query, set }) => {
+            try {
+              // period: daily | weekly | monthly | yearly
+              const periodRaw = (query?.period as string) || 'daily';
+              const period = ['daily', 'weekly', 'monthly', 'yearly'].includes(periodRaw)
+                ? (periodRaw as 'daily' | 'weekly' | 'monthly' | 'yearly')
+                : 'daily';
+
+              const type = AppDataSource.options.type;
+
+              // Time series
+              let timeQuery = reportRepository.createQueryBuilder('report');
+              if (type === 'postgres') {
+                const truncUnit = period === 'daily' ? 'day' : period === 'weekly' ? 'week' : period === 'monthly' ? 'month' : 'year';
+                timeQuery = timeQuery
+                  .select(`date_trunc('${truncUnit}', report."createdAt")`, 'bucket')
+                  .addSelect('COUNT(*)', 'count')
+                  .groupBy('bucket')
+                  .orderBy('bucket', 'ASC');
+              } else {
+                // sqlite
+                const fmt = period === 'daily' ? '%Y-%m-%d' : period === 'weekly' ? '%Y-%W' : period === 'monthly' ? '%Y-%m' : '%Y';
+                timeQuery = timeQuery
+                  .select(`strftime('${fmt}', report.createdAt)`, 'bucket')
+                  .addSelect('COUNT(*)', 'count')
+                  .groupBy('bucket')
+                  .orderBy('bucket', 'ASC');
+              }
+
+              const timeRaw = await timeQuery.getRawMany<{ bucket: string; count: string }>();
+              const timeSeries = timeRaw.map(r => ({ bucket: r.bucket, count: Number(r.count) }));
+
+              // Distribution by type
+              const byType = await reportRepository.createQueryBuilder('report')
+                .select('report.type', 'type')
+                .addSelect('COUNT(*)', 'count')
+                .groupBy('report.type')
+                .orderBy('count', 'DESC')
+                .getRawMany<{ type: string; count: string }>();
+
+              // Distribution by role
+              const byRole = await reportRepository.createQueryBuilder('report')
+                .select('report.role', 'role')
+                .addSelect('COUNT(*)', 'count')
+                .groupBy('report.role')
+                .orderBy('count', 'DESC')
+                .getRawMany<{ role: string; count: string }>();
+
+              const total = await reportRepository.count();
+
+              return {
+                success: true,
+                data: {
+                  period,
+                  total,
+                  timeSeries,
+                  typeDistribution: byType.map(x => ({ type: x.type, count: Number(x.count) })),
+                  roleDistribution: byRole.map(x => ({ role: x.role, count: Number(x.count) })),
+                },
+              };
+            } catch (error) {
+              console.error('Error fetching stats:', error);
+              set.status = 500;
+              return { success: false, error: 'Error al obtener estadísticas' };
+            }
+          })
+      )
   );
 }

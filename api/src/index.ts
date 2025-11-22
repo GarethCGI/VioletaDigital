@@ -2,6 +2,7 @@ import { Elysia } from 'elysia';
 import { cors } from '@elysiajs/cors';
 import { initializeDatabase } from '@/database';
 import { createReportRoutes } from '@/routes/reports';
+import { createAuthRoutes } from '@/routes/auth';
 
 const PORT = parseInt(process.env.PORT || '3000');
 const HOST = process.env.HOST || '0.0.0.0';
@@ -30,6 +31,7 @@ async function startServer() {
       }));
 
     // Register routes
+    createAuthRoutes(app);
     createReportRoutes(app);
 
     // Start server

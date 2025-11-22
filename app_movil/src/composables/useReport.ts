@@ -1,6 +1,7 @@
 import { ref } from 'vue';
 import { fetch } from '@tauri-apps/plugin-http';
 import type { CreateReportDTO, Report, ApiResponse } from '@/types/report';
+import { useAuthStore } from '@/stores/auth';
 
 // API base URL - can be configured via environment variable
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://192.168.0.11:3000';
@@ -8,6 +9,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://192.168.0.11:3000';
 export function useReport() {
 	const loading = ref(false);
 	const error = ref<string | null>(null);
+  const auth = useAuthStore();
 
 	const submitReport = async (data: CreateReportDTO): Promise<boolean> => {
 		loading.value = true;
@@ -54,6 +56,7 @@ export function useReport() {
 					method: 'GET',
 					headers: {
 						'Content-Type': 'application/json',
+						...(auth.accessToken ? { Authorization: `Bearer ${auth.accessToken}` } : {}),
 					},
 				}
 			);
@@ -73,10 +76,33 @@ export function useReport() {
 		}
 	};
 
+	const getReportById = async (id: string) => {
+		loading.value = true;
+		error.value = null;
+		try {
+			const response = await fetch(`${API_BASE_URL}/api/reports/${id}` , {
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/json',
+					...(auth.accessToken ? { Authorization: `Bearer ${auth.accessToken}` } : {}),
+				},
+			});
+			if (!response.ok) throw new Error(`Error: ${response.status}`);
+			return await response.json();
+		} catch (err) {
+			console.error('Error fetching report:', err);
+			error.value = err instanceof Error ? err.message : 'Error al obtener reporte';
+			return null;
+		} finally {
+			loading.value = false;
+		}
+	};
+
 	return {
 		loading,
 		error,
 		submitReport,
 		getReports,
+		getReportById,
 	};
 }

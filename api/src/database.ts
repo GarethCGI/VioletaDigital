@@ -1,5 +1,7 @@
 import { DataSource } from 'typeorm';
 import { Report } from '@/entities/Report';
+import { User } from '@/entities/User';
+import * as bcrypt from '@node-rs/bcrypt';
 
 const isDevelopment = process.env.NODE_ENV !== 'production';
 const dbType = process.env.DB_TYPE || 'postgres';
@@ -22,7 +24,7 @@ const sqliteConfig = {
 
 export const AppDataSource = new DataSource({
   ...(dbType === 'sqlite' ? sqliteConfig : postgresConfig),
-  entities: [Report],
+  entities: [Report, User],
   synchronize: isDevelopment, // Auto-create tables in development
   logging: isDevelopment,
 });
@@ -31,6 +33,18 @@ export async function initializeDatabase() {
   try {
     await AppDataSource.initialize();
     console.log('✓ Database connected successfully');
+
+    // Seed default admin if none exists
+    const userRepo = AppDataSource.getRepository(User);
+    const users = await userRepo.count();
+    if (users === 0) {
+      const username = process.env.ADMIN_USERNAME || 'admin';
+      const password = process.env.ADMIN_PASSWORD || 'ChangeMe!123';
+      const passwordHash = await bcrypt.hash(password);
+      const admin = userRepo.create({ username, passwordHash });
+      await userRepo.save(admin);
+      console.log(`✓ Seeded default admin user: ${username}`);
+    }
   } catch (error) {
     console.error('✗ Database connection failed:', error);
     throw error;

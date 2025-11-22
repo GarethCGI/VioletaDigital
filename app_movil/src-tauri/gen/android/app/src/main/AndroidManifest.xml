@@ -7,7 +7,7 @@
 
     <application
         android:icon="@mipmap/ic_launcher"
-        android:label="@string/app_name"
+        android:label="Violeta Digital"
         android:theme="@style/Theme.violeta_digital"
         android:usesCleartextTraffic="${usesCleartextTraffic}">
         <activity

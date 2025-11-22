@@ -110,4 +110,11 @@ async function openExternal(url: string | undefined) {
 			</div>
 		</div>
 	</section>
+
+	<footer class="mx-auto max-w-3xl px-4 pb-8 -mt-4">
+		<p class="text-center text-xs text-muted-foreground">
+			¿Eres administrador?
+			<router-link to="/login" class="underline hover:text-foreground">Inicia sesión</router-link>
+		</p>
+	</footer>
 </template>
