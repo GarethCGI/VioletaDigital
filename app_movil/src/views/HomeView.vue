@@ -1,36 +1,35 @@
 <script setup lang="ts">
 import { useRouter } from "vue-router";
-import { Button } from "components/ui/button";
 import { Separator } from "components/ui/separator";
-import { Shield, School, Users } from "lucide-vue-next";
+import { Icon } from "@iconify/vue";
 import { openUrl } from "@tauri-apps/plugin-opener";
 
 const router = useRouter();
 
 const roles = [
-	{ key: "Docente", color: "default" },
-	{ key: "Alumno", color: "secondary" },
-	{ key: "Autoridad Educativa", color: "outline" },
-	{ key: "PAAE", color: "ghost" },
-	{ key: "Otro", color: "default" },
+	{ key: "Docente", icon: "mdi:school", card: "rounded-lg border-2 bg-teal-500/15 hover:bg-teal-500/25 border-teal-500/40 text-teal-900", iconColor: "text-teal-700" },
+	{ key: "Alumno", icon: "mdi:account-school", card: "rounded-lg border-2 bg-sky-500/15 hover:bg-sky-500/25 border-sky-500/40 text-sky-900", iconColor: "text-sky-700" },
+	{ key: "Autoridad Educativa", icon: "mdi:account-tie", card: "rounded-lg border-2 bg-indigo-500/15 hover:bg-indigo-500/25 border-indigo-500/40 text-indigo-900", iconColor: "text-indigo-700" },
+	{ key: "PAAE", icon: "mdi:human-greeting", card: "rounded-lg border-2 bg-pink-500/15 hover:bg-pink-500/25 border-pink-500/40 text-pink-900", iconColor: "text-pink-700" },
+	{ key: "Otro", icon: "mdi:account", card: "rounded-lg border-2 bg-slate-500/15 hover:bg-slate-500/25 border-slate-500/40 text-slate-900", iconColor: "text-slate-700" },
 ] as const;
 
 const links = [
 	{
 		name: "SIPINNA",
 		description: "Sistema de Protección Integral",
-		href: "#",
+		href: "https://www.gob.mx/sipinna",
 		available: true,
-		icon: Shield,
+		icon: "mdi:shield-account",
 		color: "bg-blue-500/15 hover:bg-blue-500/25 border-blue-500/40",
 		iconColor: "text-blue-700"
 	},
 	{
 		name: "Dirección Escolar",
 		description: "Autoridades de tu institución",
-		href: "#",
+		href: "https://www.gob.mx/sep",
 		available: true,
-		icon: School,
+		icon: "mdi:school",
 		color: "bg-green-500/15 hover:bg-green-500/25 border-green-500/40",
 		iconColor: "text-green-700"
 	},
@@ -39,7 +38,7 @@ const links = [
 		description: "Equipo especializado en prevención",
 		href: "#",
 		available: false,
-		icon: Users,
+		icon: "mdi:account-group",
 		color: "bg-purple-500/15 hover:bg-purple-500/25 border-purple-500/40",
 		iconColor: "text-purple-700"
 	},
@@ -69,10 +68,16 @@ async function openExternal(url: string | undefined) {
 		</div>
 
 		<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-10">
-			<Button v-for="r in roles" :key="r.key" class="h-12" :variant="r.color as any"
-				@click="goToReportType(r.key)">
+			<button
+				v-for="r in roles"
+				:key="r.key"
+				:type="'button'"
+				:class="['transition-all cursor-pointer flex items-center justify-center gap-2 py-3 px-4 font-semibold', r.card]"
+				@click="goToReportType(r.key)"
+			>
+				<Icon :icon="r.icon" class="size-5" :class="r.iconColor" />
 				{{ r.key }}
-			</Button>
+			</button>
 		</div>
 
 		<Separator class="my-8" />
@@ -91,11 +96,11 @@ async function openExternal(url: string | undefined) {
 						l.available ? 'cursor-pointer' : 'opacity-60 cursor-not-allowed'
 					]">
 					<div class="flex flex-col gap-2">
-						<h4 class="font-medium text-sm leading-tight flex items-center gap-2">
-							<component :is="l.icon" class="size-5"
-								:class="l.available ? l.iconColor : 'text-muted-foreground'" />
-							{{ l.name }}
-						</h4>
+					<h4 class="font-medium text-sm leading-tight flex items-center gap-2">
+						<Icon :icon="l.icon" class="size-5"
+							:class="l.available ? l.iconColor : 'text-muted-foreground'" />
+						{{ l.name }}
+					</h4>
 						<p class="text-xs text-muted-foreground">{{ l.description }}</p>
 						<span v-if="!l.available" class="text-xs font-medium text-destructive mt-1">
 							Temporalmente no disponible

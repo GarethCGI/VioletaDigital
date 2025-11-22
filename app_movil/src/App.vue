@@ -9,6 +9,7 @@ import DialogTitle from "components/ui/dialog/DialogTitle.vue";
 import DialogDescription from "components/ui/dialog/DialogDescription.vue";
 import DialogFooter from "components/ui/dialog/DialogFooter.vue";
 import { Button } from "components/ui/button";
+import { Icon } from "@iconify/vue";
 
 const open = ref(false);
 </script>
@@ -22,11 +23,17 @@ const open = ref(false);
 				<div class="flex-1"></div>
 				<Dialog v-model:open="open">
 					<DialogTrigger as-child>
-						<Button variant="ghost" size="sm">Privacidad</Button>
+						<Button variant="ghost" size="sm" class="flex items-center gap-1">
+							<Icon icon="mdi:shield-lock" class="size-4" />
+							Privacidad
+						</Button>
 					</DialogTrigger>
 					<DialogContent>
 						<DialogHeader>
-							<DialogTitle>Privacidad y anonimato</DialogTitle>
+							<DialogTitle class="flex items-center gap-2">
+								<Icon icon="mdi:shield-lock" class="size-5" />
+								Privacidad y anonimato
+							</DialogTitle>
 							<DialogDescription>
 								Tus reportes se procesan sin datos de identificación. No recopilamos nombre, correo ni
 								identificadores del dispositivo. Tu información solo se usa para atender el caso.

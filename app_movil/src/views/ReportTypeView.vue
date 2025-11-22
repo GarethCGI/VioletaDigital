@@ -2,6 +2,7 @@
 import { useRoute, useRouter } from "vue-router";
 import { Button } from "components/ui/button";
 import { Separator } from "components/ui/separator";
+import { Icon } from "@iconify/vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -9,9 +10,9 @@ const router = useRouter();
 const role = (route.query.role as string) || "";
 
 const types = [
-  { key: "Violencia", card: "rounded-lg border-2 bg-red-500/15 hover:bg-red-500/25 border-red-500/40 text-red-900", icon: "alert" },
-  { key: "Acoso", card: "rounded-lg border-2 bg-amber-500/15 hover:bg-amber-500/25 border-amber-500/40 text-amber-900", icon: "users" },
-  { key: "Discriminación", card: "rounded-lg border-2 bg-purple-500/15 hover:bg-purple-500/25 border-purple-500/40 text-purple-900", icon: "tag" },
+  { key: "Violencia", card: "rounded-lg border-2 bg-red-500/15 hover:bg-red-500/25 border-red-500/40 text-red-900", icon: "mdi:alert-circle", iconColor: "text-red-700" },
+  { key: "Acoso", card: "rounded-lg border-2 bg-amber-500/15 hover:bg-amber-500/25 border-amber-500/40 text-amber-900", icon: "mdi:account-multiple", iconColor: "text-amber-700" },
+  { key: "Discriminación", card: "rounded-lg border-2 bg-purple-500/15 hover:bg-purple-500/25 border-purple-500/40 text-purple-900", icon: "mdi:tag", iconColor: "text-purple-700" },
 ] as const;
 
 function back() {
@@ -47,15 +48,7 @@ function chooseType(type: string) {
 				@click="chooseType(t.key)"
 			>
 				<span class="flex items-center gap-2 font-semibold text-base">
-					<span v-if="t.icon === 'alert'">
-						<svg xmlns="http://www.w3.org/2000/svg" class="size-5 text-red-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-					</span>
-					<span v-else-if="t.icon === 'users'">
-						<svg xmlns="http://www.w3.org/2000/svg" class="size-5 text-amber-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87M16 3.13a4 4 0 010 7.75M8 3.13a4 4 0 010 7.75" /></svg>
-					</span>
-					<span v-else-if="t.icon === 'tag'">
-						<svg xmlns="http://www.w3.org/2000/svg" class="size-5 text-purple-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 7l10 10a2 2 0 002.828 0l2.828-2.828a2 2 0 000-2.828L17.657 7a2 2 0 00-2.828 0L7 14.657a2 2 0 000 2.828L9.828 20a2 2 0 002.828 0l2.828-2.828a2 2 0 000-2.828L7 7z" /></svg>
-					</span>
+					<Icon :icon="t.icon" class="size-5" :class="t.iconColor" />
 					{{ t.key }}
 				</span>
 			</button>
