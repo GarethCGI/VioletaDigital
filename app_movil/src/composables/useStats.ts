@@ -2,7 +2,7 @@ import { ref } from 'vue';
 import { fetch } from '@tauri-apps/plugin-http';
 import { useAuthStore } from '@/stores/auth';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://192.168.0.11:3000';
+const API_BASE_URL = 'http://violetadigital.ddns.our-space.xyz:3000';
 
 export type StatsPeriod = 'daily' | 'weekly' | 'monthly' | 'yearly';
 

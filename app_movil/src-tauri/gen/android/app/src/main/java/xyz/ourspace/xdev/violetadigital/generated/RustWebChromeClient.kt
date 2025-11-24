@@ -6,7 +6,7 @@
 
 @file:Suppress("ObsoleteSdkInt", "RedundantOverride", "QueryPermissionsNeeded", "SimpleDateFormat")
 
-package xyz.our_space.xdev.violetadigital
+package xyz.ourspace.xdev.violetadigital
 
 // taken from https://github.com/ionic-team/capacitor/blob/6658bca41e78239347e458175b14ca8bd5c1d6e8/android/capacitor/src/main/java/com/getcapacitor/BridgeWebChromeClient.java
 

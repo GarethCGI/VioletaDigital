@@ -1,4 +1,5 @@
 import java.util.Properties
+import java.io.FileInputStream
 
 plugins {
     id("com.android.application")
@@ -15,10 +16,10 @@ val tauriProperties = Properties().apply {
 
 android {
     compileSdk = 36
-    namespace = "xyz.our-space.xdev.violetadigital"
+    namespace = "xyz.ourspace.xdev.violetadigital"
     defaultConfig {
         manifestPlaceholders["usesCleartextTraffic"] = "false"
-        applicationId = "xyz.our-space.xdev.violetadigital"
+        applicationId = "xyz.ourspace.xdev.violetadigital"
         minSdk = 24
         targetSdk = 36
         versionCode = tauriProperties.getProperty("tauri.android.versionCode", "1").toInt()
@@ -57,6 +58,7 @@ android {
                     .plus(getDefaultProguardFile("proguard-android-optimize.txt"))
                     .toList().toTypedArray()
             )
+			signingConfig = signingConfigs.getByName("release")
         }
     }
     kotlinOptions {

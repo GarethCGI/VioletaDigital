@@ -4,9 +4,9 @@
 // SPDX-License-Identifier: Apache-2.0
 // SPDX-License-Identifier: MIT
 
-package xyz.our_space.xdev.violetadigital
+package xyz.ourspace.xdev.violetadigital
 
-import xyz.our_space.xdev.violetadigital.RustWebView
+import xyz.ourspace.xdev.violetadigital.RustWebView
 import android.annotation.SuppressLint
 import android.os.Build
 import android.os.Bundle

@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // SPDX-License-Identifier: MIT
 
-package xyz.our_space.xdev.violetadigital
+package xyz.ourspace.xdev.violetadigital
 
 import android.net.Uri
 import android.webkit.*

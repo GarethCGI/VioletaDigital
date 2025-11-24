@@ -4,25 +4,25 @@
 # SPDX-License-Identifier: Apache-2.0
 # SPDX-License-Identifier: MIT
 
--keep class xyz.our_space.xdev.violetadigital.* {
+-keep class xyz.ourspace.xdev.violetadigital.* {
   native <methods>;
 }
 
--keep class xyz.our_space.xdev.violetadigital.WryActivity {
+-keep class xyz.ourspace.xdev.violetadigital.WryActivity {
   public <init>(...);
 
-  void setWebView(xyz.our_space.xdev.violetadigital.RustWebView);
+  void setWebView(xyz.ourspace.xdev.violetadigital.RustWebView);
   java.lang.Class getAppClass(...);
   java.lang.String getVersion();
 }
 
--keep class xyz.our_space.xdev.violetadigital.Ipc {
+-keep class xyz.ourspace.xdev.violetadigital.Ipc {
   public <init>(...);
 
   @android.webkit.JavascriptInterface public <methods>;
 }
 
--keep class xyz.our_space.xdev.violetadigital.RustWebView {
+-keep class xyz.ourspace.xdev.violetadigital.RustWebView {
   public <init>(...);
 
   void loadUrlMainThread(...);
@@ -30,6 +30,6 @@
   void evalScript(...);
 }
 
--keep class xyz.our_space.xdev.violetadigital.RustWebChromeClient,xyz.our_space.xdev.violetadigital.RustWebViewClient {
+-keep class xyz.ourspace.xdev.violetadigital.RustWebChromeClient,xyz.ourspace.xdev.violetadigital.RustWebViewClient {
   public <init>(...);
 }

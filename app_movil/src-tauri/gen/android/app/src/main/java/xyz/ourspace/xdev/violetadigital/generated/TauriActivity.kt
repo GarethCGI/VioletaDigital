@@ -4,7 +4,7 @@
 
 /* THIS FILE IS AUTO-GENERATED. DO NOT MODIFY!! */
 
-package xyz.our_space.xdev.violetadigital
+package xyz.ourspace.xdev.violetadigital
 
 import android.content.Intent
 import android.content.res.Configuration

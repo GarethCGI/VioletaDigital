@@ -6,7 +6,7 @@
 
 @file:Suppress("unused", "SetJavaScriptEnabled")
 
-package xyz.our_space.xdev.violetadigital
+package xyz.ourspace.xdev.violetadigital
 
 import android.annotation.SuppressLint
 import android.webkit.*

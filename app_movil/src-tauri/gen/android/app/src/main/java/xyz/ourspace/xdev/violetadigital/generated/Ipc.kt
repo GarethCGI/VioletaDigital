@@ -6,7 +6,7 @@
 
 @file:Suppress("unused")
 
-package xyz.our_space.xdev.violetadigital
+package xyz.ourspace.xdev.violetadigital
 
 import android.webkit.*
 
