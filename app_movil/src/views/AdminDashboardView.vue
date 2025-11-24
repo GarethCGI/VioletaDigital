@@ -166,13 +166,5 @@ function barRole() {
     <div class="flex justify-end">
       <router-link :to="{ name: 'admin-reports' }" class="text-sm underline">Ver reportes</router-link>
     </div>
-
-    <footer class="mt-auto bg-muted/50 p-4 text-center">
-      <nav class="flex justify-center gap-4">
-        <router-link to="/" class="text-sm text-muted-foreground">Inicio</router-link>
-        <router-link to="/admin" class="text-sm text-muted-foreground">Panel</router-link>
-        <router-link to="/admin-reports" class="text-sm text-muted-foreground">Reportes</router-link>
-      </nav>
-    </footer>
   </section>
 </template>

@@ -25,6 +25,9 @@
 				},
 				{
 					"url": "https://*:*"
+				},
+				{
+					"url": "http://violetadigital.ddns.our-space.xyz:19132/*"
 				}
 			]
 		}

@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { fetch } from '@tauri-apps/plugin-http';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://192.168.0.11:3000';
+export const API_BASE_URL = 'http://violetadigital.ddns.our-space.xyz:19132';
 
 interface UserInfo {
 	username: string;
@@ -30,6 +30,7 @@ export const useAuthStore = defineStore('auth', {
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ username, password }),
 			});
+			console.debug(res)
 			if (!res.ok) throw new Error('Error de autenticación');
 			const json = await res.json() as { success: boolean; data?: { accessToken: string; refreshToken: string }; error?: string };
 			if (!json.success || !json.data) throw new Error(json.error || 'Credenciales inválidas');

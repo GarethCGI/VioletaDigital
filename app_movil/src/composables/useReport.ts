@@ -1,10 +1,9 @@
 import { ref } from 'vue';
 import { fetch } from '@tauri-apps/plugin-http';
 import type { CreateReportDTO, Report, ApiResponse } from '@/types/report';
-import { useAuthStore } from '@/stores/auth';
+import { API_BASE_URL, useAuthStore } from '@/stores/auth';
 
 // API base URL - can be configured via environment variable
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://192.168.0.11:3000';
 
 export function useReport() {
 	const loading = ref(false);
