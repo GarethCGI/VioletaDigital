@@ -1,4 +1,4 @@
-package xyz.our_space.xdev.violetadigital
+package xyz.our-space.xdev.violetadigital
 
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge

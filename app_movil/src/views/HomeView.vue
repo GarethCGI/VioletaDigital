@@ -61,7 +61,7 @@ async function openExternal(url: string | undefined) {
 </script>
 
 <template>
-	<section class="mx-auto max-w-3xl px-4 py-8">
+	<section class="mx-auto max-w-3xl px-4 py-8 flex flex-col h-screen">
 		<div class="text-center space-y-2 mb-8">
 			<p class="text-sm text-muted-foreground">Estamos aquí para escucharte</p>
 			<h2 class="text-2xl font-semibold" style="font-family: 'Kaushan Script', cursive;">Compartir una situación</h2>
@@ -109,12 +109,14 @@ async function openExternal(url: string | undefined) {
 				</a>
 			</div>
 		</div>
-	</section>
 
-	<footer class="mx-auto max-w-3xl px-4 pb-8 -mt-4">
-		<p class="text-center text-xs text-muted-foreground">
-			¿Eres administrador?
-			<router-link to="/login" class="underline hover:text-foreground">Inicia sesión</router-link>
-		</p>
-	</footer>
+		<div class="flex-grow"></div>
+
+		<footer class="mt-auto mx-auto max-w-3xl px-6 pb-10">
+			<p class="text-center text-xs text-muted-foreground">
+				¿Eres administrador?
+				<router-link to="/login" class="underline hover:text-foreground">Inicia sesión</router-link>
+			</p>
+		</footer>
+	</section>
 </template>

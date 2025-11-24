@@ -3,10 +3,9 @@ import { ref, onMounted, watch } from 'vue';
 import { useReport } from '@/composables/useReport';
 import { Button } from 'components/ui/button';
 import { Input } from 'components/ui/input';
-import { Separator } from 'components/ui/separator';
 import { Icon } from '@iconify/vue';
 
-const { loading, error, getReports, getReportById } = useReport();
+const { loading, error, getReports } = useReport();
 
 const page = ref(1);
 const limit = ref(10);
@@ -38,7 +37,7 @@ function next() { if (page.value < totalPages.value) page.value++; }
 </script>
 
 <template>
-  <section class="mx-auto max-w-6xl px-4 py-8">
+  <section class="mx-auto max-w-6xl px-4 py-8 h-screen flex flex-col">
     <div class="flex items-center justify-between mb-4">
       <div>
         <p class="text-sm text-muted-foreground">Panel de administración</p>
@@ -106,5 +105,13 @@ function next() { if (page.value < totalPages.value) page.value++; }
         <Button variant="outline" :disabled="page>=totalPages" @click="next">Siguiente</Button>
       </div>
     </div>
+
+    <footer class="mt-auto bg-muted/50 p-4 text-center">
+      <nav class="flex justify-center gap-4">
+        <router-link to="/" class="text-sm text-muted-foreground">Inicio</router-link>
+        <router-link to="/admin" class="text-sm text-muted-foreground">Panel</router-link>
+        <router-link to="/admin-reports" class="text-sm text-muted-foreground">Reportes</router-link>
+      </nav>
+    </footer>
   </section>
 </template>

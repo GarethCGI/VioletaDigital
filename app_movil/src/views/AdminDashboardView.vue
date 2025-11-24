@@ -23,7 +23,7 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, T
 
 const periods: StatsPeriod[] = ['daily', 'weekly', 'monthly', 'yearly'];
 const active = ref<StatsPeriod>('daily');
-const { loading, error, data, fetchStats } = useStats();
+const { error, data, fetchStats } = useStats();
 const auth = useAuthStore();
 
 onMounted(() => {
@@ -99,7 +99,7 @@ function barRole() {
 </script>
 
 <template>
-  <section class="mx-auto max-w-6xl px-4 py-8">
+  <section class="mx-auto max-w-6xl px-4 py-8 h-screen flex flex-col">
     <div class="flex items-center justify-between mb-6">
       <div>
         <p class="text-sm text-muted-foreground">Panel de administración</p>
@@ -139,19 +139,25 @@ function barRole() {
       </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <div class="rounded-lg border bg-card text-card-foreground p-4">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-grow">
+      <div class="rounded-lg border bg-card text-card-foreground p-4 flex flex-col">
         <h3 class="text-sm font-medium mb-2">Tendencia de reportes</h3>
-        <Line :data="series()" :options="{ responsive: true, maintainAspectRatio: false }" style="height:320px;" />
-      </div>
-      <div class="rounded-lg border bg-card text-card-foreground p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <h3 class="text-sm font-medium mb-2">Por tipo</h3>
-          <Doughnut :data="pieType()" :options="{ responsive: true, maintainAspectRatio: false, plugins:{ legend:{ position:'bottom' }}}" style="height:260px;" />
+        <div class="flex-grow">
+          <Line :data="series()" :options="{ responsive: true, maintainAspectRatio: false }" style="height:100%;" />
         </div>
-        <div>
+      </div>
+      <div class="rounded-lg border bg-card text-card-foreground p-4 grid grid-cols-1 md:grid-cols-2 gap-4 flex-grow">
+        <div class="flex flex-col">
+          <h3 class="text-sm font-medium mb-2">Por tipo</h3>
+          <div class="flex-grow">
+            <Doughnut :data="pieType()" :options="{ responsive: true, maintainAspectRatio: false, plugins:{ legend:{ position:'bottom' }}}" style="height:100%;" />
+          </div>
+        </div>
+        <div class="flex flex-col">
           <h3 class="text-sm font-medium mb-2">Por rol</h3>
-          <Bar :data="barRole()" :options="{ responsive: true, maintainAspectRatio: false, plugins:{ legend:{ display:false }}}" style="height:260px;" />
+          <div class="flex-grow">
+            <Bar :data="barRole()" :options="{ responsive: true, maintainAspectRatio: false, plugins:{ legend:{ display:false }}}" style="height:100%;" />
+          </div>
         </div>
       </div>
     </div>
@@ -160,5 +166,13 @@ function barRole() {
     <div class="flex justify-end">
       <router-link :to="{ name: 'admin-reports' }" class="text-sm underline">Ver reportes</router-link>
     </div>
+
+    <footer class="mt-auto bg-muted/50 p-4 text-center">
+      <nav class="flex justify-center gap-4">
+        <router-link to="/" class="text-sm text-muted-foreground">Inicio</router-link>
+        <router-link to="/admin" class="text-sm text-muted-foreground">Panel</router-link>
+        <router-link to="/admin-reports" class="text-sm text-muted-foreground">Reportes</router-link>
+      </nav>
+    </footer>
   </section>
 </template>
