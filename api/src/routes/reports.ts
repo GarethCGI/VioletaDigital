@@ -1,6 +1,6 @@
 import { Elysia } from 'elysia';
 import { AppDataSource } from '@/database';
-import { Report } from '@/entities/Report';
+import { Report, type QuestionnaireData, type QuestionnaireFrequency, type QuestionnaireRiskLevel } from '@/entities/Report';
 import { createReportSchema, listReportsQuerySchema } from '@/schemas/report.schema';
 import { createRateLimiter } from '@/middleware/rateLimiter';
 import { authMiddleware } from '@/middleware/auth';
@@ -10,6 +10,36 @@ const rateLimiter = createRateLimiter(
   parseInt(process.env.RATE_LIMIT_MAX || '10'),
   parseInt(process.env.RATE_LIMIT_WINDOW || '60000')
 );
+
+function calculateRiskLevel(level1: QuestionnaireData['level1']): QuestionnaireRiskLevel {
+  const scoreMap: Record<QuestionnaireFrequency, number> = {
+    NEVER: 0,
+    SOMETIMES: 1,
+    OFTEN: 2,
+    ALMOST_ALWAYS: 3,
+  };
+
+  const totalScore =
+    scoreMap[level1.hurtfulJokes] +
+    scoreMap[level1.jealousyControlHumiliation] +
+    scoreMap[level1.exclusion] +
+    scoreMap[level1.physicalAggression] +
+    scoreMap[level1.digitalHarassment];
+
+  if (
+    totalScore >= 10 ||
+    level1.physicalAggression === 'ALMOST_ALWAYS' ||
+    level1.digitalHarassment === 'ALMOST_ALWAYS'
+  ) {
+    return 'RED';
+  }
+
+  if (totalScore >= 6 || scoreMap[level1.jealousyControlHumiliation] >= 2) {
+    return 'ORANGE';
+  }
+
+  return 'YELLOW';
+}
 
 export function createReportRoutes(app: Elysia) {
   const reportRepository = AppDataSource.getRepository(Report);
@@ -41,12 +71,32 @@ export function createReportRoutes(app: Elysia) {
       // POST /api/reports - Create a new report (public)
       .post('/', async ({ body, set }) => {
         try {
+          console.log('[POST /reports] Received body:', JSON.stringify(body, null, 2));
+          
           // Validate input
           const validatedData = createReportSchema.parse(body);
+          console.log('[POST /reports] Validated data:', JSON.stringify(validatedData, null, 2));
+
+          const hasQuestionnaire = Boolean(validatedData.questionnaireData);
+          console.log('[POST /reports] hasQuestionnaire:', hasQuestionnaire);
+          console.log('[POST /reports] questionnaireData:', validatedData.questionnaireData);
+
+          const derivedRiskLevel = validatedData.questionnaireData
+            ? calculateRiskLevel(validatedData.questionnaireData.level1)
+            : undefined;
+          console.log('[POST /reports] derivedRiskLevel:', derivedRiskLevel);
 
           // Create and save report
-          const report = reportRepository.create(validatedData);
+          const report = reportRepository.create({
+            ...validatedData,
+            hasQuestionnaire,
+            riskLevel: validatedData.riskLevel ?? derivedRiskLevel,
+            informantRole: validatedData.questionnaireData?.level0.informantRole,
+          });
+          console.log('[POST /reports] Created report before save:', JSON.stringify(report, null, 2));
+          
           const savedReport = await reportRepository.save(report);
+          console.log('[POST /reports] Saved report:', JSON.stringify(savedReport, null, 2));
 
           set.status = 201;
           return {
@@ -55,7 +105,7 @@ export function createReportRoutes(app: Elysia) {
             message: 'Reporte creado exitosamente',
           };
         } catch (error) {
-          console.error('Error creating report:', error);
+          console.error('[POST /reports] Error creating report:', error);
           
           // Handle Zod validation errors
           if (error && typeof error === 'object' && 'issues' in error) {
@@ -83,7 +133,8 @@ export function createReportRoutes(app: Elysia) {
           .get('/', async ({ query, set }) => {
         try {
           // Validate and parse query params
-          const { page, limit, role, type } = listReportsQuerySchema.parse(query);
+          const { page, limit, role, type, informantRole, riskLevel, hasQuestionnaire } = listReportsQuerySchema.parse(query);
+          console.log('[GET /reports] Query params:', { page, limit, role, type, informantRole, riskLevel, hasQuestionnaire });
 
           // Build query
               const queryBuilder = reportRepository.createQueryBuilder('report');
@@ -96,6 +147,18 @@ export function createReportRoutes(app: Elysia) {
             queryBuilder.andWhere('report.type = :type', { type });
           }
 
+          if (informantRole) {
+            queryBuilder.andWhere('report.informantRole = :informantRole', { informantRole });
+          }
+
+          if (riskLevel) {
+            queryBuilder.andWhere('report.riskLevel = :riskLevel', { riskLevel });
+          }
+
+          if (typeof hasQuestionnaire === 'boolean') {
+            queryBuilder.andWhere('report.hasQuestionnaire = :hasQuestionnaire', { hasQuestionnaire });
+          }
+
           // Count total
           const total = await queryBuilder.getCount();
 
@@ -105,6 +168,8 @@ export function createReportRoutes(app: Elysia) {
             .skip((page - 1) * limit)
             .take(limit)
             .getMany();
+
+          console.log('[GET /reports] Retrieved reports:', JSON.stringify(reports, null, 2));
 
           return {
             success: true,
@@ -133,6 +198,8 @@ export function createReportRoutes(app: Elysia) {
               const report = await reportRepository.findOne({
                 where: { id: params.id },
               });
+
+              console.log('[GET /reports/:id] Retrieved report:', JSON.stringify(report, null, 2));
 
               if (!report) {
                 set.status = 404;
@@ -206,16 +273,39 @@ export function createReportRoutes(app: Elysia) {
                 .orderBy('count', 'DESC')
                 .getRawMany<{ role: string; count: string }>();
 
+              // Distribution by risk level (questionnaire reports)
+              const byRiskLevel = await reportRepository.createQueryBuilder('report')
+                .select('report.riskLevel', 'riskLevel')
+                .addSelect('COUNT(*)', 'count')
+                .where('report.riskLevel IS NOT NULL')
+                .groupBy('report.riskLevel')
+                .orderBy('count', 'DESC')
+                .getRawMany<{ riskLevel: string; count: string }>();
+
+              // Distribution by informant role (questionnaire reports)
+              const byInformantRole = await reportRepository.createQueryBuilder('report')
+                .select('report.informantRole', 'informantRole')
+                .addSelect('COUNT(*)', 'count')
+                .where('report.informantRole IS NOT NULL')
+                .groupBy('report.informantRole')
+                .orderBy('count', 'DESC')
+                .getRawMany<{ informantRole: string; count: string }>();
+
               const total = await reportRepository.count();
+              const questionnaireTotal = await reportRepository.count({ where: { hasQuestionnaire: true } });
 
               return {
                 success: true,
                 data: {
                   period,
                   total,
+                  questionnaireTotal,
+                  questionnaireRate: total > 0 ? Number(((questionnaireTotal / total) * 100).toFixed(1)) : 0,
                   timeSeries,
                   typeDistribution: byType.map(x => ({ type: x.type, count: Number(x.count) })),
                   roleDistribution: byRole.map(x => ({ role: x.role, count: Number(x.count) })),
+                  riskDistribution: byRiskLevel.map(x => ({ riskLevel: x.riskLevel, count: Number(x.count) })),
+                  informantDistribution: byInformantRole.map(x => ({ informantRole: x.informantRole, count: Number(x.count) })),
                 },
               };
             } catch (error) {

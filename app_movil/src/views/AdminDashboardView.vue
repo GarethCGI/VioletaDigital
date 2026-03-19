@@ -48,6 +48,18 @@ const colors = {
   slate: '#64748b',
 };
 
+const riskLabels: Record<string, string> = {
+  YELLOW: 'Amarillo',
+  ORANGE: 'Naranja',
+  RED: 'Rojo',
+};
+
+function riskCount(risk: 'YELLOW' | 'ORANGE' | 'RED') {
+  const ds = data.value?.riskDistribution || [];
+  const found = ds.find((x: any) => x.riskLevel === risk);
+  return found?.count ?? 0;
+}
+
 function series() {
   const ts = data.value?.timeSeries || [];
   return {
@@ -99,7 +111,7 @@ function barRole() {
 </script>
 
 <template>
-  <section class="mx-auto max-w-6xl px-4 py-8 h-screen flex flex-col">
+  <section class="mx-auto max-w-6xl px-4 py-8 min-h-full flex flex-col">
     <div class="flex items-center justify-between mb-6">
       <div>
         <p class="text-sm text-muted-foreground">Panel de administración</p>
@@ -124,10 +136,18 @@ function barRole() {
       <span>{{ error }}</span>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
       <div class="rounded-lg border bg-card text-card-foreground p-4">
         <p class="text-xs text-muted-foreground">Total de reportes</p>
         <p class="text-2xl font-semibold">{{ data?.total ?? 0 }}</p>
+      </div>
+      <div class="rounded-lg border bg-card text-card-foreground p-4">
+        <p class="text-xs text-muted-foreground">Con cuestionario</p>
+        <p class="text-2xl font-semibold">{{ data?.questionnaireTotal ?? 0 }}</p>
+      </div>
+      <div class="rounded-lg border bg-card text-card-foreground p-4">
+        <p class="text-xs text-muted-foreground">% con cuestionario</p>
+        <p class="text-2xl font-semibold">{{ data?.questionnaireRate ?? 0 }}%</p>
       </div>
       <div class="rounded-lg border bg-card text-card-foreground p-4">
         <p class="text-xs text-muted-foreground">Período activo</p>
@@ -136,6 +156,21 @@ function barRole() {
       <div class="rounded-lg border bg-card text-card-foreground p-4">
         <p class="text-xs text-muted-foreground">Última actualización</p>
         <p class="text-2xl font-semibold">{{ new Date().toLocaleString() }}</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div class="rounded-lg border bg-yellow-500/10 border-yellow-500/30 p-4">
+        <p class="text-xs text-yellow-800">Riesgo {{ riskLabels.YELLOW }}</p>
+        <p class="text-2xl font-semibold text-yellow-900">{{ riskCount('YELLOW') }}</p>
+      </div>
+      <div class="rounded-lg border bg-orange-500/10 border-orange-500/30 p-4">
+        <p class="text-xs text-orange-800">Riesgo {{ riskLabels.ORANGE }}</p>
+        <p class="text-2xl font-semibold text-orange-900">{{ riskCount('ORANGE') }}</p>
+      </div>
+      <div class="rounded-lg border bg-red-500/10 border-red-500/30 p-4">
+        <p class="text-xs text-red-800">Riesgo {{ riskLabels.RED }}</p>
+        <p class="text-2xl font-semibold text-red-900">{{ riskCount('RED') }}</p>
       </div>
     </div>
 

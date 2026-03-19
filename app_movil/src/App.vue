@@ -57,7 +57,7 @@ const open = ref(false);
 				</Dialog>
 			</div>
 		</header>
-		<main class="flex-1">
+		<main class="flex-1 overflow-y-auto">
 			<RouterView />
 		</main>
 	</div>

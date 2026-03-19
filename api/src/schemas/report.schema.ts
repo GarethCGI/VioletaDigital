@@ -16,6 +16,47 @@ export const reportTypeSchema = z.enum([
   'Discriminación',
 ]);
 
+export const questionnaireInformantRoleSchema = z.enum([
+  'VICTIM',
+  'WITNESS',
+  'PREFER_NOT_TO_SAY',
+  'OTHER',
+]);
+
+export const questionnaireFrequencySchema = z.enum([
+  'NEVER',
+  'SOMETIMES',
+  'OFTEN',
+  'ALMOST_ALWAYS',
+]);
+
+export const questionnaireRiskLevelSchema = z.enum([
+  'YELLOW',
+  'ORANGE',
+  'RED',
+]);
+
+export const questionnaireDataSchema = z.object({
+  level0: z.object({
+    informantRole: questionnaireInformantRoleSchema,
+  }),
+  level1: z.object({
+    hurtfulJokes: questionnaireFrequencySchema,
+    jealousyControlHumiliation: questionnaireFrequencySchema,
+    exclusion: questionnaireFrequencySchema,
+    physicalAggression: questionnaireFrequencySchema,
+    digitalHarassment: questionnaireFrequencySchema,
+  }),
+  level3: z.object({
+    damageAfterViolence: z.enum(['IMMEDIATE', 'AFTER_SOME', 'MOST_EPISODES', 'PRE_EXISTING']).optional(),
+    wantsAnonymousRecord: z.boolean().optional(),
+    wantsToIdentifyRelatedPerson: z.boolean().optional(),
+    wantsAnonymousContact: z.boolean().optional(),
+    preferredInitialContact: z.enum(['IN_APP', 'EMAIL', 'PHONE', 'NO_CONTACT']).optional(),
+    preferredSupport: z.enum(['PSYCHOLOGICAL', 'ACADEMIC', 'LEGAL', 'SOCIAL']).optional(),
+  }).optional(),
+});
+
 // Create report schema
 export const createReportSchema = z.object({
   role: reportRoleSchema,
@@ -35,6 +76,8 @@ export const createReportSchema = z.object({
   additionalInfo: z.string()
     .max(5000, 'La información adicional no puede exceder 5000 caracteres')
     .optional(),
+  questionnaireData: questionnaireDataSchema.optional(),
+  riskLevel: questionnaireRiskLevelSchema.optional(),
 });
 
 // Query params for listing reports
@@ -43,6 +86,9 @@ export const listReportsQuerySchema = z.object({
   limit: z.coerce.number().int().positive().max(100).default(10),
   role: reportRoleSchema.optional(),
   type: reportTypeSchema.optional(),
+  informantRole: questionnaireInformantRoleSchema.optional(),
+  riskLevel: questionnaireRiskLevelSchema.optional(),
+  hasQuestionnaire: z.coerce.boolean().optional(),
 });
 
 // Type exports

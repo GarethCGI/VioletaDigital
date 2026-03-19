@@ -7,7 +7,13 @@ import { Input } from 'components/ui/input';
 import { Textarea } from 'components/ui/textarea';
 import { Icon } from '@iconify/vue';
 import { useReport } from '@/composables/useReport';
-import type { ReportRole, ReportType } from '@/types/report';
+import type {
+	ReportRole,
+	ReportType,
+	QuestionnaireFrequency,
+	QuestionnaireInformantRole,
+	QuestionnaireRiskLevel,
+} from '@/types/report';
 
 const route = useRoute();
 const router = useRouter();
@@ -43,9 +49,61 @@ const date = ref('');
 const witnesses = ref('');
 const additionalInfo = ref('');
 
+const attachQuestionnaire = ref(true);
+
+const informantRole = ref<QuestionnaireInformantRole>('PREFER_NOT_TO_SAY');
+const hurtfulJokes = ref<QuestionnaireFrequency>('NEVER');
+const jealousyControlHumiliation = ref<QuestionnaireFrequency>('NEVER');
+const exclusion = ref<QuestionnaireFrequency>('NEVER');
+const physicalAggression = ref<QuestionnaireFrequency>('NEVER');
+const digitalHarassment = ref<QuestionnaireFrequency>('NEVER');
+
+const damageAfterViolence = ref<'IMMEDIATE' | 'AFTER_SOME' | 'MOST_EPISODES' | 'PRE_EXISTING' | ''>('');
+const wantsAnonymousRecord = ref<boolean | null>(null);
+const wantsToIdentifyRelatedPerson = ref<boolean | null>(null);
+const wantsAnonymousContact = ref<boolean | null>(null);
+const preferredInitialContact = ref<'IN_APP' | 'EMAIL' | 'PHONE' | 'NO_CONTACT' | ''>('');
+const preferredSupport = ref<'PSYCHOLOGICAL' | 'ACADEMIC' | 'LEGAL' | 'SOCIAL' | ''>('');
+
 // Validation
 const descriptionError = ref('');
 const showSuccess = ref(false);
+
+/* const riskStyles: Record<QuestionnaireRiskLevel, string> = {
+	YELLOW: 'bg-yellow-500/15 text-yellow-800 border-yellow-500/40',
+	ORANGE: 'bg-orange-500/15 text-orange-800 border-orange-500/40',
+	RED: 'bg-red-500/15 text-red-800 border-red-500/40',
+}; */
+
+const scoreMap: Record<QuestionnaireFrequency, number> = {
+	NEVER: 0,
+	SOMETIMES: 1,
+	OFTEN: 2,
+	ALMOST_ALWAYS: 3,
+};
+
+const computedRiskLevel = computed<QuestionnaireRiskLevel>(() => {
+	const totalScore =
+		scoreMap[hurtfulJokes.value] +
+		scoreMap[jealousyControlHumiliation.value] +
+		scoreMap[exclusion.value] +
+		scoreMap[physicalAggression.value] +
+		scoreMap[digitalHarassment.value];
+
+	if (
+		totalScore >= 10 ||
+		physicalAggression.value === 'ALMOST_ALWAYS' ||
+		digitalHarassment.value === 'ALMOST_ALWAYS'
+	) {
+		return 'RED';
+	}
+
+	if (totalScore >= 6 || scoreMap[jealousyControlHumiliation.value] >= 2) {
+		return 'ORANGE';
+	}
+
+	return 'YELLOW';
+});
 
 const validateForm = () => {
 	descriptionError.value = '';
@@ -66,7 +124,9 @@ const validateForm = () => {
 const handleSubmit = async () => {
 	if (!validateForm()) return;
 
-	const success = await submitReport({
+	console.log('[ReportFormView] attachQuestionnaire.value:', attachQuestionnaire.value);
+	
+	const payload = {
 		role: role.value,
 		type: type.value,
 		description: description.value,
@@ -74,7 +134,33 @@ const handleSubmit = async () => {
 		date: date.value || undefined,
 		witnesses: witnesses.value || undefined,
 		additionalInfo: additionalInfo.value || undefined,
-	});
+		questionnaireData: attachQuestionnaire.value
+			? {
+					level0: {
+						informantRole: informantRole.value,
+					},
+					level1: {
+						hurtfulJokes: hurtfulJokes.value,
+						jealousyControlHumiliation: jealousyControlHumiliation.value,
+						exclusion: exclusion.value,
+						physicalAggression: physicalAggression.value,
+						digitalHarassment: digitalHarassment.value,
+					},
+					level3: {
+						damageAfterViolence: damageAfterViolence.value || undefined,
+						wantsAnonymousRecord: wantsAnonymousRecord.value ?? undefined,
+						wantsToIdentifyRelatedPerson: wantsToIdentifyRelatedPerson.value ?? undefined,
+						wantsAnonymousContact: wantsAnonymousContact.value ?? undefined,
+						preferredInitialContact: preferredInitialContact.value || undefined,
+						preferredSupport: preferredSupport.value || undefined,
+					},
+			  }
+			: undefined,
+		riskLevel: attachQuestionnaire.value ? computedRiskLevel.value : undefined,
+	};
+	console.log('[ReportFormView] Payload being submitted:', JSON.stringify(payload, null, 2));
+
+	const success = await submitReport(payload);
 
 	if (success) {
 		showSuccess.value = true;
@@ -84,6 +170,18 @@ const handleSubmit = async () => {
 		date.value = '';
 		witnesses.value = '';
 		additionalInfo.value = '';
+		informantRole.value = 'PREFER_NOT_TO_SAY';
+		hurtfulJokes.value = 'NEVER';
+		jealousyControlHumiliation.value = 'NEVER';
+		exclusion.value = 'NEVER';
+		physicalAggression.value = 'NEVER';
+		digitalHarassment.value = 'NEVER';
+		damageAfterViolence.value = '';
+		wantsAnonymousRecord.value = null;
+		wantsToIdentifyRelatedPerson.value = null;
+		wantsAnonymousContact.value = null;
+		preferredInitialContact.value = '';
+		preferredSupport.value = '';
 
 		// Redirect after 2 seconds
 		setTimeout(() => {
@@ -243,6 +341,142 @@ const goBack = () => {
 						class="bg-white dark:bg-white text-gray-900 shadow-sm" />
 				</FieldContent>
 			</Field>
+
+			<div class="rounded-lg border bg-card text-card-foreground p-4 space-y-4">
+				<div class="flex items-center justify-between gap-2">
+					<div>
+						<p class="text-sm font-medium">Cuestionario de valoración</p>
+						<p class="text-xs text-muted-foreground">Puedes adjuntar respuestas para dar más contexto a tu reporte.</p>
+					</div>
+					<label class="inline-flex items-center gap-2 text-sm">
+						<input v-model="attachQuestionnaire" type="checkbox" class="size-4" />
+						Adjuntar
+					</label>
+				</div>
+
+				<div v-if="attachQuestionnaire" class="space-y-5">
+					<div>
+						<label class="text-sm font-medium">Nivel 0: ¿Quién responde?</label>
+						<select v-model="informantRole" class="mt-1 h-9 w-full rounded-md border bg-background px-3 text-sm">
+							<option value="VICTIM">Soy la persona que vive la violencia</option>
+							<option value="WITNESS">Soy testigo de la violencia</option>
+							<option value="PREFER_NOT_TO_SAY">Prefiero no especificar</option>
+							<option value="OTHER">Otro</option>
+						</select>
+					</div>
+
+					<div class="space-y-3">
+						<p class="text-sm font-medium">Nivel 1: Frecuencia de señales</p>
+						<div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+							<label class="space-y-1">
+								<span class="text-xs text-muted-foreground">Bromas hirientes</span>
+								<select v-model="hurtfulJokes" class="h-9 w-full rounded-md border bg-background px-3 text-sm">
+									<option value="NEVER">Nunca</option>
+									<option value="SOMETIMES">Algunas veces</option>
+									<option value="OFTEN">Muchas veces</option>
+									<option value="ALMOST_ALWAYS">Casi siempre</option>
+								</select>
+							</label>
+							<label class="space-y-1">
+								<span class="text-xs text-muted-foreground">Celos/control/humillación</span>
+								<select v-model="jealousyControlHumiliation" class="h-9 w-full rounded-md border bg-background px-3 text-sm">
+									<option value="NEVER">Nunca</option>
+									<option value="SOMETIMES">Algunas veces</option>
+									<option value="OFTEN">Muchas veces</option>
+									<option value="ALMOST_ALWAYS">Casi siempre</option>
+								</select>
+							</label>
+							<label class="space-y-1">
+								<span class="text-xs text-muted-foreground">Exclusión o menosprecio</span>
+								<select v-model="exclusion" class="h-9 w-full rounded-md border bg-background px-3 text-sm">
+									<option value="NEVER">Nunca</option>
+									<option value="SOMETIMES">Algunas veces</option>
+									<option value="OFTEN">Muchas veces</option>
+									<option value="ALMOST_ALWAYS">Casi siempre</option>
+								</select>
+							</label>
+							<label class="space-y-1">
+								<span class="text-xs text-muted-foreground">Agresión física</span>
+								<select v-model="physicalAggression" class="h-9 w-full rounded-md border bg-background px-3 text-sm">
+									<option value="NEVER">Nunca</option>
+									<option value="SOMETIMES">Algunas veces</option>
+									<option value="OFTEN">Muchas veces</option>
+									<option value="ALMOST_ALWAYS">Casi siempre</option>
+								</select>
+							</label>
+							<label class="space-y-1 md:col-span-2">
+								<span class="text-xs text-muted-foreground">Acoso digital</span>
+								<select v-model="digitalHarassment" class="h-9 w-full rounded-md border bg-background px-3 text-sm">
+									<option value="NEVER">Nunca</option>
+									<option value="SOMETIMES">Algunas veces</option>
+									<option value="OFTEN">Muchas veces</option>
+									<option value="ALMOST_ALWAYS">Casi siempre</option>
+								</select>
+							</label>
+						</div>
+					</div>
+
+					<div class="space-y-3">
+						<p class="text-sm font-medium">Nivel 3: Seguimiento y apoyo (opcional)</p>
+						<div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+							<label class="space-y-1 md:col-span-2">
+								<span class="text-xs text-muted-foreground">¿Los síntomas iniciaron después de la violencia?</span>
+								<select v-model="damageAfterViolence" class="h-9 w-full rounded-md border bg-background px-3 text-sm">
+									<option value="">Sin especificar</option>
+									<option value="IMMEDIATE">Sí, inmediatamente</option>
+									<option value="AFTER_SOME">Sí, después de algunos episodios</option>
+									<option value="MOST_EPISODES">Sí, después de la mayoría de episodios</option>
+									<option value="PRE_EXISTING">No, existían antes</option>
+								</select>
+							</label>
+							<label class="space-y-1">
+								<span class="text-xs text-muted-foreground">¿Registrar anónimamente?</span>
+								<select v-model="wantsAnonymousRecord" class="h-9 w-full rounded-md border bg-background px-3 text-sm">
+									<option :value="null">Sin especificar</option>
+									<option :value="true">Sí</option>
+									<option :value="false">No</option>
+								</select>
+							</label>
+							<label class="space-y-1">
+								<span class="text-xs text-muted-foreground">¿Señalar persona relacionada?</span>
+								<select v-model="wantsToIdentifyRelatedPerson" class="h-9 w-full rounded-md border bg-background px-3 text-sm">
+									<option :value="null">Sin especificar</option>
+									<option :value="true">Sí</option>
+									<option :value="false">No</option>
+								</select>
+							</label>
+							<label class="space-y-1">
+								<span class="text-xs text-muted-foreground">¿Desea contacto anónimo?</span>
+								<select v-model="wantsAnonymousContact" class="h-9 w-full rounded-md border bg-background px-3 text-sm">
+									<option :value="null">Sin especificar</option>
+									<option :value="true">Sí</option>
+									<option :value="false">No</option>
+								</select>
+							</label>
+							<label class="space-y-1">
+								<span class="text-xs text-muted-foreground">Contacto inicial</span>
+								<select v-model="preferredInitialContact" class="h-9 w-full rounded-md border bg-background px-3 text-sm">
+									<option value="">Sin especificar</option>
+									<option value="IN_APP">Mensaje en app</option>
+									<option value="EMAIL">Correo</option>
+									<option value="PHONE">Llamada</option>
+									<option value="NO_CONTACT">Sin contacto</option>
+								</select>
+							</label>
+							<label class="space-y-1 md:col-span-2">
+								<span class="text-xs text-muted-foreground">Apoyo preferido</span>
+								<select v-model="preferredSupport" class="h-9 w-full rounded-md border bg-background px-3 text-sm">
+									<option value="">Sin especificar</option>
+									<option value="PSYCHOLOGICAL">Psicológico</option>
+									<option value="ACADEMIC">Académico</option>
+									<option value="LEGAL">Jurídico</option>
+									<option value="SOCIAL">Social</option>
+								</select>
+							</label>
+						</div>
+					</div>
+				</div>
+			</div>
 
 			<!-- Actions -->
 			<div class="grid grid-cols-2 gap-3">
